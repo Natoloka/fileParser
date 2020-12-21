@@ -14,12 +14,12 @@ public enum Cities {
     NEW_YORK("New York", Countries.US);
 
     private static final Map<String, Cities> BY_CITIES = new HashMap<>();
-    private static final Map<Cities, Countries> BY_COUNTRIES = new HashMap<>();
+    private static final Map<String, Countries> BY_COUNTRIES = new HashMap<>();
 
     static {
         for (Cities cities : values()) {
             BY_CITIES.put(cities.city, cities);
-            BY_COUNTRIES.put(cities, cities.country);
+            BY_COUNTRIES.put(cities.city, cities.country);
         }
     }
 
@@ -35,7 +35,7 @@ public enum Cities {
         return BY_CITIES.get(city);
     }
 
-    public static Country valueOfCountry(Cities city){
+    public static Countries valueOfCountry(String city) {
         return BY_COUNTRIES.get(city);
     }
 
