@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,79 +23,38 @@ public class ParsingHelper {
 
         String[] namesArray = listOfNames.replaceAll("(\\s|\\n)", "").split(",");
         System.out.println(namesArray);
+        List<String> arrayList = Arrays.asList(namesArray);
 
         HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
         int responseCode = httpConn.getResponseCode();
 
         // always check HTTP response code first
         if (responseCode == HttpURLConnection.HTTP_OK) {
-            String fileName = "";
-            String disposition = httpConn.getHeaderField("Content-Disposition");
-            String contentType = httpConn.getContentType();
-            int contentLength = httpConn.getContentLength();
-
-            if (disposition != null) {
-                // extracts file name from header field
-                int index = disposition.indexOf("filename=");
-                if (index > 0) {
-                    fileName = disposition.substring(index + 10,
-                            disposition.length() - 1);
-                }
-            } else {
-                // extracts file name from URL
-                fileName = fileURL.substring(fileURL.lastIndexOf("/") + 1,
-                        fileURL.length());
-            }
-
-//            System.out.println("Content-Type = " + contentType);
-//            System.out.println("Content-Disposition = " + disposition);
-//            System.out.println("Content-Length = " + contentLength);
-//            System.out.println("fileName = " + fileName);
 
             // opens input stream from the HTTP connection
             InputStream inputStream = httpConn.getInputStream();
-            String saveFilePath = saveDir + File.separator + fileName;
+            Scanner sc = null;
+            sc = new Scanner(inputStream, "UTF-8");
+            int counter = 0;
+            int lineNumber = 1;
+            while (sc.hasNextLine()) {
 
-            // opens an output stream to save into file
-            FileOutputStream outputStream = new FileOutputStream(saveFilePath);
+                String line = sc.nextLine();
+                counter = counter + line.length();
+                for (String name : arrayList) {
+                    Pattern findWordPattern = Pattern.compile(name);
 
-            int bytesRead = -1;
-            byte[] buffer = new byte[BUFFER_SIZE];
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
+                    Matcher matcher = findWordPattern.matcher(line);
+                    while (matcher.find()) {
+                        int offsetStart = counter + matcher.start();
+                        System.out.println(name + " " + lineNumber + " " + offsetStart);
+                    }
+                }
+                lineNumber = lineNumber + 1;
             }
-
-
-//            TODO: complete matcher
-//            Pattern findWordPattern = Pattern.compile("his");
-//            for (int i = 0; i < 1000; i++) {
-//                Matcher matcher = findWordPattern.matcher(myWholeFileInAString);
-//                while (matcher.find()) {
-//                    int offsetStart = matcher.start();
-//                    int offsetEnd = matcher.end();
-//
-//                }
-//
-//                FileReader fileReader = new FileReader(fileName);
-//                try (BufferedReader bufferedReader = new BufferedReader(fileReader)) {
-//                    String line;
-//                    while ((line = bufferedReader.readLine()) != null) {
-//                        if (line.contains(namesArray[0])) {
-//                            System.out.println(line.offsetByCodePoints());
-//                        }
-//
-//                    }
-//                }
-//            ----------
-
-                outputStream.close();
-                inputStream.close();
-
-                System.out.println("File downloaded");
-            } else{
-                System.out.println("No file to download. Server replied HTTP code: " + responseCode);
-            }
+            inputStream.close();
             httpConn.disconnect();
 
         }
     }
+}
